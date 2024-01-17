@@ -70,3 +70,33 @@ git clone https://github.com/zidanewenqsh/protobuf_demo.git
 
 # VSCode 配置说明
 在Debug的时候，建议选择Makefile的方式进行构建，目前如果用CMake的方式，会重复构建。
+发现是在用CMake的方式构建的时候使用add_custom_command来代替execute_process可以解决。
+execute_process 是在配置时一次性执行，主要用于辅助 CMake 配置逻辑；而 add_custom_command 则是在构建时根据需要执行，主要用于扩展构建过程并生成其他构建目标所依赖的文件。
+- add_custom_command代码
+```
+add_custom_command(
+    OUTPUT "${PROTO_OUTPUT_DIR}/${EXECUTABLE_NAME}.pb.cc"
+            "${PROTO_OUTPUT_DIR}/${EXECUTABLE_NAME}.pb.h"
+    COMMAND protoc 
+            -I "${CMAKE_SOURCE_DIR}/${PROTOS_DIR}" 
+            --cpp_out=${PROTO_OUTPUT_DIR} 
+            ${PROTO_FILE}
+    DEPENDS ${PROTO_FILE}             # 添加对.proto文件的依赖
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating C++ files from ${PROTO_FILE}"
+)
+```
+- execute_process代码
+```
+# 手动调用protoc命令并指定输出目录
+execute_process(COMMAND protoc 
+                -I "${CMAKE_SOURCE_DIR}/${PROTOS_DIR}" 
+                --cpp_out=${PROTO_OUTPUT_DIR} 
+                ${PROTO_FILE})
+```
+
+另外还有protobuf_generate_cpp也可用来构建protobuf文件。格式如下:
+- protobuf_generate_cpp代码
+'''
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+'''

@@ -62,11 +62,23 @@ foreach(CPP_FILE ${CPP_FILES})
         file(MAKE_DIRECTORY ${PROTO_OUTPUT_DIR})  # 创建目标目录
         message(INFO "\${PROTOS_DIR}=${PROTOS_DIR}")
         # 手动调用protoc命令并指定输出目录
-        execute_process(COMMAND protoc 
-                        -I "${CMAKE_SOURCE_DIR}/${PROTOS_DIR}" 
-                        --cpp_out=${PROTO_OUTPUT_DIR} 
-                        ${PROTO_FILE})
+        # execute_process(COMMAND protoc 
+        #                 -I "${CMAKE_SOURCE_DIR}/${PROTOS_DIR}" 
+        #                 --cpp_out=${PROTO_OUTPUT_DIR} 
+        #                 ${PROTO_FILE})
+        add_custom_command(
+            OUTPUT "${PROTO_OUTPUT_DIR}/${EXECUTABLE_NAME}.pb.cc"
+                    "${PROTO_OUTPUT_DIR}/${EXECUTABLE_NAME}.pb.h"
+            COMMAND protoc 
+                    -I "${CMAKE_SOURCE_DIR}/${PROTOS_DIR}" 
+                    --cpp_out=${PROTO_OUTPUT_DIR} 
+                    ${PROTO_FILE}
+            DEPENDS ${PROTO_FILE}             # 添加对.proto文件的依赖
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMENT "Generating C++ files from ${PROTO_FILE}"
+        )
 
+        
         # 添加生成的.cc和.h文件到可执行目标（假设它们都位于指定的输出目录）
         file(GLOB PROTO_GEN_SRCS "${PROTO_OUTPUT_DIR}/${EXECUTABLE_NAME}*.pb.cc")
         file(GLOB PROTO_GEN_HDRS "${PROTO_OUTPUT_DIR}/${EXECUTABLE_NAME}*.pb.h")
